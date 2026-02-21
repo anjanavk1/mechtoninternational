@@ -1,3 +1,6 @@
+import { useCallback, useEffect, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import { ArrowLeft, ArrowRight, Scan } from "lucide-react";
 import catGenerator from "@/assets/cat-generator.jpg";
 import catEngine from "@/assets/cat-engine.jpg";
 import catEarthmoving from "@/assets/cat-earthmoving.jpg";
@@ -20,82 +23,189 @@ const products = [
     image: catEngine,
   },
   {
-    name: "Earthmoving & Dumper Parts",
+    name: "Earthmoving Parts",
     description: "Heavy earthmoving equipment parts.",
     image: catEarthmoving,
   },
   {
-    name: "Undercarriage Parts",
+    name: "Undercarriage",
     description: "Tracks, rollers, idlers, sprockets and more.",
     image: catUndercarriage,
   },
   {
-    name: "Ground Engaging Tools",
-    description: "Buckets, teeth, tips, adapters and cutting edges.",
+    name: "G.E.T. Tools",
+    description: "Buckets, teeth, tips, adapters and edges.",
     image: catGet,
   },
   {
-    name: "Automobile Parts",
+    name: "Auto Parts",
     description: "Automotive components and spare parts.",
     image: catAutomobile,
   },
   {
-    name: "Engine Oil & Grease",
+    name: "Oil & Grease",
     description: "Lubricants and industrial greases.",
     image: catOil,
   },
   {
-    name: "Filtration Solutions",
+    name: "Filtration",
     description: "Filters for fuel, oil, air, and hydraulic systems.",
     image: catFilters,
   },
   {
-    name: "Drill Rigs & Crusher Parts",
+    name: "Drill & Crusher",
     description: "Equipment for drilling and crushing operations.",
     image: catDrill,
   },
 ];
 
 const ProductsSection = () => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    align: "start",
+    slidesToScroll: 1,
+    breakpoints: {
+      "(min-width: 768px)": { slidesToScroll: 2 },
+      "(min-width: 1024px)": { slidesToScroll: 3 },
+    },
+  });
+
+  const [prevBtnEnabled, setPrevBtnEnabled] = useState(false);
+  const [nextBtnEnabled, setNextBtnEnabled] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+    setPrevBtnEnabled(emblaApi.canScrollPrev());
+    setNextBtnEnabled(emblaApi.canScrollNext());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+  }, [emblaApi, onSelect]);
+
+  const scrollSnaps = emblaApi ? emblaApi.scrollSnapList() : [];
+
   return (
-    <section id="products" className="py-24 bg-background">
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <p className="text-primary font-bold uppercase tracking-widest text-sm mb-2">Our Products</p>
-          <h2 className="text-3xl md:text-4xl font-black uppercase text-foreground">
-            Product Categories
-          </h2>
-          <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-            Premium solutions from top-notch brands worldwide — built to perform, engineered to last.
-          </p>
+    <section id="products" className="py-24 bg-zinc-950 relative overflow-hidden">
+      {/* Blueprint Grid Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-white/10 pb-8">
+          <div>
+            <div className="flex items-center gap-2 mb-2 text-primary">
+              <Scan className="w-4 h-4 animate-pulse" />
+              <span className="font-mono text-xs tracking-widest uppercase">Our Products</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black uppercase text-white tracking-tight">
+              Product <span className="text-outline-white">Categories</span>
+            </h2>
+          </div>
+          {/* Navigation Buttons */}
+          <div className="flex items-center gap-3 mt-6 md:mt-0">
+            <button
+              onClick={scrollPrev}
+              className="w-11 h-11 flex items-center justify-center border border-white/20 hover:border-primary hover:text-primary text-white/60 transition-all duration-300"
+              style={{ clipPath: "polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%)" }}
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={scrollNext}
+              className="w-11 h-11 flex items-center justify-center border border-white/20 hover:border-primary hover:text-primary text-white/60 transition-all duration-300"
+              style={{ clipPath: "polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%)" }}
+            >
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => (
-            <div
-              key={product.name}
-              className="group bg-card rounded overflow-hidden border-glow-red cursor-pointer"
-            >
-              <div className="relative overflow-hidden aspect-[4/3]">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-all duration-500 flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold uppercase tracking-wider text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    View Details
-                  </span>
+        {/* Embla Slider */}
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-6">
+            {products.map((product, index) => (
+              <div
+                key={product.name}
+                className="flex-none w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] group relative bg-[#0F0F0F] hover:bg-[#141414] transition-colors duration-500"
+                style={{
+                  clipPath: "polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%)",
+                }}
+              >
+                {/* Technical Corners */}
+                <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-white/20 group-hover:border-primary/50 transition-colors duration-300 z-30"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-white/20 group-hover:border-primary/50 transition-colors duration-300 z-30"></div>
+
+                {/* Image */}
+                <div className="relative aspect-[4/3] overflow-hidden border-b border-white/5">
+                  <div className="absolute inset-0 z-20 bg-primary/10 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  <div className="absolute inset-0 z-20 bg-gradient-to-b from-transparent via-primary/20 to-transparent translate-y-[-100%] group-hover:animate-scan pointer-events-none h-1/2 w-full blur-sm" />
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700 ease-out scale-100 group-hover:scale-105"
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="p-6 relative">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold uppercase text-white tracking-wide group-hover:text-primary transition-colors duration-300">
+                      {product.name}
+                    </h3>
+                    <div className="h-0.5 w-8 bg-primary/50 mt-2 group-hover:w-full transition-all duration-500"></div>
+                  </div>
+
+                  <p className="text-white/60 text-sm leading-relaxed mb-6 font-light">
+                    {product.description}
+                  </p>
+
+                  <div className="flex items-center justify-end pt-4 border-t border-white/5 group-hover:border-white/10 transition-colors">
+                    <div className="flex items-center gap-2 text-xs font-bold text-white group-hover:text-primary transition-colors cursor-pointer">
+                      Explore
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="p-5">
-                <h3 className="text-base font-bold uppercase text-foreground mb-1">{product.name}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
-              </div>
-            </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Dot Indicators */}
+        <div className="flex justify-center gap-2 mt-8">
+          {scrollSnaps.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => emblaApi && emblaApi.scrollTo(idx)}
+              className={`h-1 transition-all duration-300 ${idx === selectedIndex ? "w-8 bg-primary" : "w-3 bg-white/20"
+                }`}
+            />
           ))}
         </div>
       </div>
+
+      <style>{`
+        .text-outline-white {
+          -webkit-text-stroke: 1px rgba(255,255,255,0.2);
+          color: transparent;
+        }
+        @keyframes scan {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(200%); }
+        }
+        .animate-scan {
+          animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+      `}</style>
     </section>
   );
 };
